@@ -1,46 +1,66 @@
 //============================================================================
 // Name        : Batch.cpp
-// Author      : Greg Burgess
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Author      : Greg Burgess, Jack Lam
+// Version     : 0.01
+// Copyright   : GNU General Public License V3
+// Description : A Bat Scheduling simulator to test out various scheduling algorithms.
 //============================================================================
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include "Proc.h"
 using namespace std;
 
-void parseFile(const char *path) {
-	ifstream myfile(path);
-	if(!myfile) {
-		cout<<"Error opening output file"<<endl;
-		system("pause");
-		exit(1);
-	}
+#define SIG_POS 11
 
-	const size_t SIZE = 30;
-	string line[SIZE]; // creates SIZE empty strings
-	size_t i=0;
-	while(!myfile.eof() && i < SIZE) {
-		getline(myfile,line[i]); // read the next line into the next string
-		++i;
+Proc * parseFile(string path, int length) {
+	int i=0,j=0;
+	int *array = (int *)calloc(SIG_POS,sizeof(int));
+	Proc * procs = (Proc *)calloc(length,sizeof(Proc));
+	char line [1024];
+	char * temp;
+	FILE *fp;
+	//Open the file
+	fp = fopen(path.c_str(),"r");
+	while (fgets(line, sizeof(line), fp) != NULL && i<length) {
+		j=0;
+		//Grab the first token
+		temp = strtok(line," \t");
+		array[j]=atoi(temp);
+		//Grab the next SIG_POS
+		while(temp!=NULL && j<SIG_POS) {
+			//Dump into array
+			array[j]=atoi(temp);
+			temp = strtok(NULL," \t");
+			j++;
+		}
+		procs[i].init(array);
+		i++;
 	}
-	size_t numLines = i;
-
-	for (i=0; i < numLines; ++i) {
-		cout << i << ". " << line[i]; // no need to test for empty lines any more
-	}
-		return;
+	fclose(fp);
+	return procs;
 }
 
 
 int main(int argc, char* argv[]) {
-	if (argc < 4) {
-		cout << "Usage: <filename>";
+	if (argc < 3) {
+		cout << "Usage: <filename> <number of files to read from log>";
 		exit(0);
 	}
-	parseFile(argv[2]);
+	int NUM_ENTRIES_TO_PROCESS = atoi(argv[2]);
+	Proc * array = parseFile(argv[1],NUM_ENTRIES_TO_PROCESS);
+	int i=0;
+	long totalRuntime = 0;
+	//Sum Runtimes
+	for(i=0; i<	NUM_ENTRIES_TO_PROCESS;i++) {
+		totalRunTime += array[i].runTime);
+	}	
+	//Any Bat scheduling algorithm takes at 
+	//most 2x as long as the optimal schedule.
+	totalRuntime *= 2; 
+
+	
 	return 0;
 }
