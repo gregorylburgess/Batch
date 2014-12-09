@@ -10,6 +10,8 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <map>
+#include <vector>
 #include "Slot.h"
 using namespace std;
 
@@ -43,6 +45,35 @@ Proc * parseFile(string path, int length) {
 	return procs;
 }
 
+void allocate(int i, Slot* timeslot, long runTime, int coreCount) {
+	int j=i;
+	int end=i+runTime;
+	for(j=i;j<end;j++) {
+		timeslot[j].cores -= coreCount;
+	}
+	return;
+}
+
+long makeSchedule(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
+	long time=0;
+	int i=0, j=0;
+	int minProcs = queue[0].numProc;
+	std::map<long,Proc> runningProcs;
+	vector<long> current_procs;
+	//While we have processes to schedule...
+	printf("%i<%i\n", i, NUM_ENTRIES_TO_PROCESS);
+	while (i<NUM_ENTRIES_TO_PROCESS) {
+		//while we have free cores to schedule at this timestep...
+		printf("scheduling...%i<%i\n", minProcs, timeslot[time].cores);
+		while (minProcs <= timeslot[time].cores) {
+			allocate(i,timeslot,queue[i].runTime, timeslot[i].cores);
+			i++;
+			minProcs = queue[i].numProc;
+		}
+		time += 1;
+	}
+	return time;
+}
 
 int main(int argc, char* argv[]) {
 	if (argc < 4) {
@@ -70,11 +101,9 @@ int main(int argc, char* argv[]) {
 	for(i=0;i<NUM_ENTRIES_TO_PROCESS;i++) { 
 		timeSlot[i].init(NUM_CORES, NUM_ENTRIES_TO_PROCESS);
 	}
-
-	#ifdef FCFS
-		
-	#endif
-
+	printf("Making schedule...\n");
+	long time = makeSchedule(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+	printf("%li\n",time);
 	
 	return 0;
 }

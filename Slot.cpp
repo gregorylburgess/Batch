@@ -2,7 +2,7 @@
 
 void Slot::init(int coreCount, int numProcesses) {
 cores = coreCount;
-events = new Event[2*numProcesses];
+events = new Event[coreCount];
 numEvents = 0;
 }
 
