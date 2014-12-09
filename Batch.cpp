@@ -55,25 +55,27 @@ void allocate(int i, Slot* timeslot, long runTime, int coreCount) {
 }
 
 long makeSchedule(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
-	long time=0;
+	long time=0, endTime=0;
 	int i=0, j=0;
 	int minProcs = queue[0].numProc;
 	std::map<long,Proc> runningProcs;
 	vector<long> current_procs;
 	//While we have processes to schedule...
-	printf("%i<%i\n", i, NUM_ENTRIES_TO_PROCESS);
 	while (i<NUM_ENTRIES_TO_PROCESS) {
 		//while we have free cores to schedule at this timestep...
-		printf("scheduling job %i...%i<%i\n",i, minProcs, timeslot[time].cores);
-		printf("time:%li\n",time);
-		while (minProcs <= timeslot[time].cores) {
-			allocate(time,timeslot,queue[i].runTime, timeslot[i].cores);
+		//printf("time:%li\n",time);
+		while (minProcs <= timeslot[time].cores && i<NUM_ENTRIES_TO_PROCESS) {
+			endTime = max(endTime,time+queue[i].runTime);
+			printf("Put job %i @ time %li\t req'd: %i cores\t%i cores avail End=%li\n",i, time,minProcs, timeslot[time].cores,endTime);
+			
+			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
 			i++;
 			minProcs = queue[i].numProc;
 		}
+		
 		time += 1;
 	}
-	return time;
+	return endTime;
 }
 
 int main(int argc, char* argv[]) {
@@ -104,7 +106,7 @@ int main(int argc, char* argv[]) {
 	}
 	printf("Making schedule...\n");
 	long time = makeSchedule(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
-	printf("%li\n",time);
+	printf("\nTotal run time: %li\n",time);
 	
 	return 0;
 }
