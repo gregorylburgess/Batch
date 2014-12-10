@@ -143,7 +143,7 @@ vector<Proc> balancedSpiralHeuristic(vector<Proc> & openJobs, vector<Proc> & old
 			openJobs.pop_back();
 		}
 		else{//sum_L >= sum_R, add largest job to first position of R
-			R.insert(openJobs.begin(), openJobs.back());
+			R.insert(R.begin(), openJobs.back());
 			sum_R += openJobs.back().numProc;
 			openJobs.pop_back();
 		}
