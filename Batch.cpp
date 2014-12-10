@@ -66,7 +66,7 @@ long makeSchedule(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 		//printf("time:%li\n",time);
 		while (minProcs <= timeslot[time].cores && i<NUM_ENTRIES_TO_PROCESS) {
 			endTime = max(endTime,time+queue[i].runTime);
-			printf("Put job %i @ time %li\t req'd: %i cores\t%i cores avail End=%li\n",i, time,minProcs, timeslot[time].cores,endTime);
+			printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",i, time,minProcs, timeslot[time].cores,queue[i].runTime,endTime);
 			
 			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
 			i++;
