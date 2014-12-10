@@ -43,7 +43,7 @@ long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 	int queuePosition = 0;
 	//While we have processes to schedule...
 	while (true) {
-		if(queuePosition >= NUM_ENTRIES_TO_PROCESS){
+		if(queuePosition >= NUM_ENTRIES_TO_PROCESS+1){
 			//Did all we wanted to do
 			break;
 		}
@@ -110,7 +110,6 @@ vector<Proc> balancedSpiralHeuristic(vector<Proc> & openJobs, vector<Proc> & old
 		return balancedJobs;
 	}
 
-	printf("I made it here\n");
 	//Place n-1 in right and n-2 in left
 	R.push_back(openJobs.back());
 	sum_R += openJobs.back().numProc;
