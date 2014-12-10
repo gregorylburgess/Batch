@@ -16,7 +16,7 @@
 using namespace std;
 
 #define SIG_POS 11
-#include "Algorithms.cpp"
+#include "Algorithms.h"
 
 Proc * parseFile(string path, int NUM_ENTRIES_TO_PROCESS) {
 	int *array = (int *)calloc(SIG_POS,sizeof(int)),
@@ -83,9 +83,16 @@ int main(int argc, char* argv[]) {
 		timeSlot[i].init(NUM_CORES, NUM_ENTRIES_TO_PROCESS);
 	}
 	printf("Making schedule...\n");
+
+#ifdef FCFS
 	long time = makeFCFS(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
-	//long time = makeBackfill(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
-	//long time = makeBalancedSpiral(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+#endif
+#ifdef BACKFILL
+	long time = makeBackfill(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+#endif
+#ifdef SPIRAL
+	long time = makeBalancedSpiral(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+#endif
 	printf("\nTotal run time: %li\n",time+startTime);
 	
 	return 0;

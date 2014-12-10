@@ -43,7 +43,7 @@ long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 	int queuePosition = 0;
 	//While we have processes to schedule...
 	while (true) {
-		if(queuePosition >= NUM_ENTRIES_TO_PROCESS+1){
+		if(queuePosition >= NUM_ENTRIES_TO_PROCESS && time >= endTime){
 			//Did all we wanted to do
 			break;
 		}
@@ -181,7 +181,7 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) 
 	while (true) {
 
 
-		if(queuePosition >= NUM_ENTRIES_TO_PROCESS){
+		if(queuePosition >= NUM_ENTRIES_TO_PROCESS && time > endTime){
 			//Did all we wanted to do
 			break;
 		}
