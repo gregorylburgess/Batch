@@ -19,7 +19,7 @@ printf("%i < %i\n", i, NUM_ENTRIES_TO_PROCESS);
 	while (i<NUM_ENTRIES_TO_PROCESS) {
 		//while we have free cores to schedule at this timestep...
 		while (queue[i].submitTime <= time && minProcs <= timeslot[time].cores && i<NUM_ENTRIES_TO_PROCESS) {
-printf("time:%li\n",time);
+printf("st:%li, time:%li, rc:%i, ac:%i\n",queue[i].submitTime, time, minProcs, timeslot[time].cores);
 			endTime = max(endTime,time+queue[i].runTime);
 printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs, timeslot[time].cores,queue[i].runTime,endTime);
 			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);

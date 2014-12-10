@@ -28,7 +28,7 @@ Proc * parseFile(string path, int NUM_ENTRIES_TO_PROCESS) {
 	FILE *fp;
 
 	fp = fopen(path.c_str(),"r");		//Open the file
-	while (fgets(line, sizeof(line), fp) != NULL && i<length) {
+	while (fgets(line, sizeof(line), fp) != NULL && i<NUM_ENTRIES_TO_PROCESS) {
 		j=0;
 		temp = strtok(line," \t");		//Grab the first token
 		array[j]=atoi(temp);
