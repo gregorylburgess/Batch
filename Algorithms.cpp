@@ -15,18 +15,19 @@ long makeFCFS(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 	map<long,Proc> runningProcs;
 	vector<long> current_procs;
 	//While we have processes to schedule...
-printf("%i < %i\n", i, NUM_ENTRIES_TO_PROCESS);
 	while (i<NUM_ENTRIES_TO_PROCESS) {
 		//while we have free cores to schedule at this timestep...
 		while (queue[i].submitTime <= time && minProcs <= timeslot[time].cores && i<NUM_ENTRIES_TO_PROCESS) {
+#ifdef DEBUG
 printf("st:%li, time:%li, rc:%i, ac:%i\n",queue[i].submitTime, time, minProcs, timeslot[time].cores);
+#endif
 			endTime = max(endTime,time+queue[i].runTime);
 printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs, timeslot[time].cores,queue[i].runTime,endTime);
 			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
 			i++;
 			minProcs = queue[i].numProc;
 		}
-		
+		//printf("time: %li\n", time);
 		time += 1;
 	}
 	return endTime;

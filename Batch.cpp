@@ -54,11 +54,12 @@ int main(int argc, char* argv[]) {
 	int NUM_ENTRIES_TO_PROCESS = atoi(argv[2]),
 		NUM_CORES = atoi(argv[3]),
 		i=0;
-	long totalRuntime = 0;
+
+	printf("Parsing file...\n");
 	Proc * queue = parseFile(argv[1], NUM_ENTRIES_TO_PROCESS);
+	printf("Normalizing times\n");
 	long startTime = queue[0].submitTime;
-	for(i=0; i<NUM_ENTRIES_TO_PROCESS; i++) {//Sum Runtimes & validate core count
-		totalRuntime += queue[i].runTime;
+	for(i=0; i<NUM_ENTRIES_TO_PROCESS; i++) {//validate core count
 		queue[i].submitTime -= startTime;  //Start the first submit time at 0 to save space
 		if(NUM_CORES < queue[i].numProc) {
 			printf("Error, a job requested more than the maximum number of cores!\
@@ -66,11 +67,19 @@ int main(int argc, char* argv[]) {
 			exit(0);
 		}
 	}
-	//Any Bat scheduling algorithm takes at most 2x as long as the optimal sequential schedule.
-	totalRuntime *= 2; 
 
-	Slot timeSlot[totalRuntime];
-	for(i=0;i<totalRuntime;i++) { 
+	printf("Building timespan...\n");
+	long maxRuntime = queue[NUM_ENTRIES_TO_PROCESS-1].submitTime + queue[NUM_ENTRIES_TO_PROCESS-1].runTime;
+	maxRuntime *= 2;//any scheduling algorithm should not be more than twice the total runtime
+
+	#ifdef DEBUG
+	printf("TR%li\n",maxRuntime);
+	#endif
+	printf("Allocating...\n");
+	Slot * timeSlot = (Slot *)calloc(maxRuntime,sizeof(Slot));
+	//Slot timeSlot[maxRuntime];
+
+	for(i=0;i<maxRuntime;i++) { 
 		timeSlot[i].init(NUM_CORES, NUM_ENTRIES_TO_PROCESS);
 	}
 	printf("Making schedule...\n");
