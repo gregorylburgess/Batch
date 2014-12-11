@@ -226,11 +226,11 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 	vector<Proc> openJobs;
 	vector<Proc> balancedJobs;
 	int queuePosition = 0;
+	int futureProcsRemaining;
+	int totalCores = timeslot[0].cores;
 
 	//While we have processes to schedule...
 	while (true) {
-
-
 		if(queuePosition >= NUM_ENTRIES_TO_PROCESS && time > endTime){
 			//Did all we wanted to do
 			break;
@@ -252,10 +252,25 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 				allocate(time,timeslot,openJobs.front().runTime,openJobs.front().numProc);
 				openJobs.erase(openJobs.begin());
 				i--;
+				//Set the amount of cores I need in the future for the new front job.
+				futureProcsRemaining = totalCores - openJobs.front().numProc;
 			}
 
 			else{ // I am not the first job so I should try to backfill
+				//Check if I can finish before the current job so the priority jobs can start asap
 				if((openJobs[i].numProc <= timeslot[time].cores) && (openJobs[i].runTimeEstimate+time <= endTime)){
+					endTime = max(endTime,time+openJobs[i].runTime);
+					endTimeForJob = time+openJobs[i].runTime;
+					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+					openJobs.erase(openJobs.begin()+i);
+					i--;
+				}
+				//Need to check if this job can fit and not hamper the priority job.
+				else if(openJobs[i].numProc <= timeslot[time].cores && openJobs[i].numProc < futureProcsRemaining){
+					//I can fit and not interfere!
+					//Tell the scheduler how much cores are left...
+					futureProcsRemaining -= openJobs[i].numProc;
 					endTime = max(endTime,time+openJobs[i].runTime);
 					endTimeForJob = time+openJobs[i].runTime;
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
@@ -265,9 +280,7 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 				}
 			}
 		}
-		//else continue since I can't fit this one but I might be able to fit the next one.
 		time += 1;
-
 	}
 	return endTime;
 }
