@@ -88,22 +88,32 @@ int main(int argc, char* argv[]) {
 	for(i=0;i<numTimeSlots;i++) { 
 		timeSlot[i].init(NUM_CORES, NUM_ENTRIES_TO_PROCESS);
 	}
-	printf("Making schedule...\n");
 
+	//Allocating variables fo math
+	map<int, long> slowDown;
+	map<int, long> waitTime;
+	map<int, long> turnAroundTime;
+	map<int, long>::iterator it;
+
+	printf("Making schedule...\n");
 #ifdef FCFS
-	long time = makeFCFS(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+	long time = makeFCFS(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
 #endif
 #ifdef BACKFILL
-	long time = makeBackfill(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+	long time = makeBackfill(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
 #endif
 #ifdef SPIRAL
-	long time = makeBalancedSpiral(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+	long time = makeBalancedSpiral(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
 #endif
 #ifdef EASY
-	long time = makeEasy(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+	long time = makeEasy(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
 #endif
 	printf("\nTotal run time: %li\n",time+startTime);
 	
+
+	for(it = slowDown.begin();it != slowDown.end(); it++){
+			printf("Job %i had slowdown of %li\n", it->first, it->second);
+		}
 	return 0;
 }
 
