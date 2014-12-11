@@ -1,15 +1,36 @@
 
-void allocate(int i, Slot* timeslot, long runTime, int coreCount) {
-	int j=i;
-	int end=i+runTime;
-	for(j=i;j<end;j++) {
-		timeslot[j].cores -= coreCount;
+void clean(Slot* timeslot,int currentTime, int runTime) {
+		//printf("cleanSlots: %li, runTime: %i\n",cleanSlots,runTime); 
+		//printf("dirty:%li\n",dirty);
+		//printf("current Time:%li\n",currentTime%numTimeSlots);
+		int i=dirty;
+		while(i!=currentTime%numTimeSlots){
+			timeslot[i].cores=NUM_CORES;
+			i=(i+1)%numTimeSlots;
+			cleanSlots++;
+		}
+		dirty=(currentTime-1 + numTimeSlots)%numTimeSlots;
+		//printf("dirty:%li\n",dirty);
+		//printf("cleanSlots: %li\n",cleanSlots); 
+	}
+
+void allocate(int currentTime, Slot* timeslot,  long runTime, int coreCount) {
+	int i = 0;
+	//if(cleanSlots < runTime) { //If you pass Dirty, clean first
+		//clean from dirty to the currentTime.
+		clean(timeslot, currentTime,runTime);
+	//}
+	cleanSlots -= runTime;//Mark the allocated slots dirty
+	for(i=0;i<runTime;i++) {
+		timeslot[(currentTime+i)%numTimeSlots].cores -= coreCount;
 	}
 	return;
 }
 
-long makeFCFS(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
-	long time= queue[0].submitTime, endTime=0;
+
+
+long makeFCFS(Proc *queue, Slot* timeslot,  map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
+	long time= queue[0].submitTime, endTime=0, dirty=0;
 	int i=0, j=0;
 	int minProcs = queue[0].numProc;
 	map<long,Proc> runningProcs;
@@ -17,15 +38,12 @@ long makeFCFS(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,lo
 	//While we have processes to schedule...
 	while (i<NUM_ENTRIES_TO_PROCESS) {
 		//while we have free cores to schedule at this timestep...
-		while (queue[i].submitTime <= time && minProcs <= timeslot[time].cores && i<NUM_ENTRIES_TO_PROCESS) {
-			#ifdef DEBUG
-			printf("st:%li, time:%li, rc:%i, ac:%i\n",queue[i].submitTime, time, minProcs, timeslot[time].cores);
-			#endif
+		while (queue[i].submitTime <= time && minProcs <= timeslot[time%numTimeSlots].cores && i<NUM_ENTRIES_TO_PROCESS) {
+
 			endTime = max(endTime,time+queue[i].runTime);
 			#ifndef SILENT
-			printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs,
-
-			 timeslot[time].cores,queue[i].runTime,endTime);
+			printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs, 
+timeslot[time%numTimeSlots].cores,queue[i].runTime,endTime);
 			#endif
 			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
 
@@ -37,13 +55,12 @@ long makeFCFS(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,lo
 			i++;
 			minProcs = queue[i].numProc;
 		}
-		//printf("time: %li\n", time);
 		time += 1;
 	}
 	return endTime;
 }
 
-long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime){
+long makeBackfill(Proc *queue, Slot* timeslot,  map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime){
 	long time=0;
 	long endTime = 0;
 	long endTimeForJob = 0;
@@ -66,11 +83,11 @@ long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<in
 
 		//Got some openjobs, time to start scheduling with backfill
 		for(i=0; i<openJobs.size(); i++){
-			if(openJobs[i].numProc <= timeslot[time].cores){//I fit, time to allocate
+			if(openJobs[i].numProc <= timeslot[time%numTimeSlots].cores){//I fit, time to allocate
 				endTime = max(endTime,time+openJobs[i].runTime);
 				endTimeForJob = time+openJobs[i].runTime;
 				#ifndef SILENT
-				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 				#endif
 				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 
@@ -185,7 +202,7 @@ vector<Proc> balancedSpiralHeuristic(vector<Proc> & openJobs, vector<Proc> & old
 }
 
 
-long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
+long makeBalancedSpiral(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
 	long time=0;
 	long endTime = 0;
 	long endTimeForJob = 0;
@@ -218,11 +235,11 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, 
 
 		//Got some openjobs, time to start scheduling with backfill
 		for(i=0; i<balancedJobs.size(); i++){
-			if(balancedJobs[i].numProc <= timeslot[time].cores){//I fit, time to allocate
+			if(balancedJobs[i].numProc <= timeslot[time%numTimeSlots].cores){//I fit, time to allocate
 				endTime = max(endTime,time+balancedJobs[i].runTime);
 				endTimeForJob = time+balancedJobs[i].runTime;
 				#ifndef SILENT
-				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",balancedJobs[i].ID, time,balancedJobs[i].numProc, timeslot[time].cores,balancedJobs[i].runTime, endTimeForJob);
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",balancedJobs[i].ID, time,balancedJobs[i].numProc, timeslot[time%numTimeSlots].cores,balancedJobs[i].runTime, endTimeForJob);
 				#endif
 				allocate(time,timeslot,balancedJobs[i].runTime, balancedJobs[i].numProc);
 
@@ -241,7 +258,7 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, 
 	return endTime;
 }
 
-long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
+long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
 	long time=0;
 	long endTime = 0;
 	long endTimeForJob = 0;
@@ -269,12 +286,12 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,lo
 		//Got some openjobs, time to start scheduling with EASY
 		for(i=0; i<openJobs.size(); i++){
 			//Check to see if I have a priority job
-			if(openJobs.front().numProc <= timeslot[time].cores && i==0){
+			if(openJobs.front().numProc <= timeslot[time%numTimeSlots].cores && i==0){
 				endTime = max(endTime, time+openJobs.front().runTime);
 				endTimeForJob = time + openJobs.front().runTime;
 
 				#ifndef SILENT
-				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time].cores,openJobs.front().runTime, endTimeForJob);
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time%numTimeSlots].cores,openJobs.front().runTime, endTimeForJob);
 				#endif
 				allocate(time,timeslot,openJobs.front().runTime,openJobs.front().numProc);
 				slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
@@ -289,11 +306,11 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,lo
 
 			else{ // I am not the first job so I should try to backfill
 				//Check if I can finish before the current job so the priority jobs can start asap
-				if((openJobs[i].numProc <= timeslot[time].cores) && (openJobs[i].runTimeEstimate+time <= endTime)){
+				if((openJobs[i].numProc <= timeslot[time%numTimeSlots].cores) && (openJobs[i].runTimeEstimate+time <= endTime)){
 					endTime = max(endTime,time+openJobs[i].runTime);
 					endTimeForJob = time+openJobs[i].runTime;
 					#ifndef SILENT
-					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 					#endif
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 
@@ -305,14 +322,14 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,lo
 					i--;
 				}
 				//Need to check if this job can fit and not hamper the priority job.
-				else if(openJobs[i].numProc <= timeslot[time].cores && openJobs[i].numProc < futureProcsRemaining){
+				else if(openJobs[i].numProc <= timeslot[time%numTimeSlots].cores && openJobs[i].numProc < futureProcsRemaining){
 					//I can fit and not interfere!
 					//Tell the scheduler how much cores are left...
 					futureProcsRemaining -= openJobs[i].numProc;
 					endTime = max(endTime,time+openJobs[i].runTime);
 					endTimeForJob = time+openJobs[i].runTime;
 					#ifndef SILENT
-					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 					#endif
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 

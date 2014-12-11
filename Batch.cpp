@@ -16,6 +16,9 @@
 using namespace std;
 
 #define SIG_POS 11
+long cleanSlots=0, dirty=0, numTimeSlots=0;
+int NUM_ENTRIES_TO_PROCESS=0, NUM_CORES=0;
+
 #include "Algorithms.h"
 
 Proc * parseFile(string path, int NUM_ENTRIES_TO_PROCESS) {
@@ -52,9 +55,9 @@ int main(int argc, char* argv[]) {
 		cout << "Usage: <filename> <number of lines to read from log> <number of cores available>";
 		exit(0);
 	}
-	int NUM_ENTRIES_TO_PROCESS = atoi(argv[2]),
-		NUM_CORES = atoi(argv[3]),
-		i=0;
+	NUM_ENTRIES_TO_PROCESS = atoi(argv[2]);
+	NUM_CORES = atoi(argv[3]);
+
 	#ifndef SILENT
 	printf("Parsing file...\n");
 	#endif
@@ -64,6 +67,7 @@ int main(int argc, char* argv[]) {
 	#endif
 	long startTime = queue[0].submitTime;
 	long maxRT = queue[0].runTime;
+	int i=0;
 	for(i=0; i<NUM_ENTRIES_TO_PROCESS; i++) {//validate core count
 		queue[i].submitTime -= startTime;  //Start the first submit time at 0 to save space
 		maxRT=max(maxRT,queue[i].runTime);
@@ -76,8 +80,7 @@ int main(int argc, char* argv[]) {
 	#ifndef SILENT
 	printf("Building timespan...\n");
 	#endif
-	long numTimeSlots = queue[NUM_ENTRIES_TO_PROCESS-1].submitTime + maxRT;
-	numTimeSlots*=1.5;
+	numTimeSlots = 1.5*maxRT;
 	#ifdef DEBUG
 	printf("numTimeSlots:%li\n",numTimeSlots);
 	#endif
@@ -88,8 +91,11 @@ int main(int argc, char* argv[]) {
 	//Slot timeSlot[numTimeSlots];
 
 	for(i=0;i<numTimeSlots;i++) { 
-		timeSlot[i].init(NUM_CORES, NUM_ENTRIES_TO_PROCESS);
+		timeSlot[i].init(NUM_CORES);
 	}
+	//if you run out, you have to clean up!
+	cleanSlots=numTimeSlots;
+	dirty=0;
 
 	//Allocating variables fo math
 	map<int, long> slowDown;
@@ -99,24 +105,24 @@ int main(int argc, char* argv[]) {
 	#ifndef SILENT
 	printf("Making schedule...\n");
 	#endif
-#ifdef FCFS
-	long time = makeFCFS(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
-#endif
-#ifdef BACKFILL
-	long time = makeBackfill(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
-#endif
-#ifdef SPIRAL
-	long time = makeBalancedSpiral(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
-#endif
-#ifdef EASY
-	long time = makeEasy(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
-#endif
+	#ifdef FCFS
+	long time = makeFCFS(queue,timeSlot, slowDown, waitTime, turnAroundTime);
+	#endif
+	#ifdef BACKFILL
+	long time = makeBackfill(queue,timeSlot, slowDown, waitTime, turnAroundTime);
+	#endif
+	#ifdef SPIRAL
+	long time = makeBalancedSpiral(queue, slowDown, waitTime, turnAroundTime);
+	#endif
+	#ifdef EASY
+	long time = makeEasy(queue,timeSlot, slowDown, waitTime, turnAroundTime);
+	#endif
 
 	long totalSlowDown = 0,  maxSlowDown=0;
 	for(it = slowDown.begin();it != slowDown.end(); it++){
-			totalSlowDown += it->second;
-			maxSlowDown = max(maxSlowDown,it->second);
-		}
+		totalSlowDown += it->second;
+		maxSlowDown = max(maxSlowDown,it->second);
+	}
 	double avgSlowDown = totalSlowDown/NUM_ENTRIES_TO_PROCESS;
 	printf("\nTotal Slowdown: %li\n",totalSlowDown);
 	printf("Avg Slowdown: %f\n",avgSlowDown);

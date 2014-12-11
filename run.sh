@@ -1,15 +1,15 @@
-source comp.sh
-for alg in {"FCFS","BACKFILL","SPIRAL"}
+numjobs=3000;
+for name in  "ctc.txt $numjobs 308" "cea.txt $numjobs 45824" "das.txt $numjobs 64" "nasa.txt $numjobs 128 test.txt $numjobs"
 do
+echo "==========$name=========="
+echo "==========$name==========" >>"rslt.txt"
 
-echo "==========$alg========="
-g++ -D $alg Batch.cpp Proc.h Proc.cpp Slot.h Slot.cpp Event.h Event.cpp  -o batch
-
-for name in {"atlas 1000 8696",  "ctc 1000 308", "cea 1000 64", "das 1000 64", "inteldshort","nasa 1000 128" }
+for alg in "FCFS" "BACKFILL" "SPIRAL"
 do
-
-echo $name
-rslt=$(./batch $name)
+echo "$alg"
+echo "$alg" >> "rslt.txt"
+g++ -D $alg -D SILENT -O4 Batch.cpp Proc.h Proc.cpp Slot.h Slot.cpp Event.h Event.cpp  -o batch
+rslt=$(./batch test/$name)
 echo $rslt
 echo "$rslt" >> "rslt.txt"
 done

@@ -1,14 +1,6 @@
 #include "Slot.h"
 
-void Slot::init(int coreCount, int numProcesses) {
+void Slot::init(int coreCount) {
 cores = coreCount;
-events = new Event[coreCount];
-numEvents = 0;
 }
 
-
-
-void Slot::addEvent(Event *event) {
-events[numEvents] = *event;
-numEvents ++;
-}
