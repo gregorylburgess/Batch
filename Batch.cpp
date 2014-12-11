@@ -37,7 +37,7 @@ Proc * parseFile(string path, int NUM_ENTRIES_TO_PROCESS) {
 			temp = strtok(NULL," \t");
 			j++;
 		}
-		if (array[4]>=0) {  //Ignore lines that don't have a specified processor request
+		if (array[4]>=0 && array[3]>0) {  //Ignore lines that don't have a specified processor request or runtimes <= 0
 			array[0]=i; //Make our own IDs
 			procs[i].init(array);
 			i++;
@@ -55,32 +55,37 @@ int main(int argc, char* argv[]) {
 	int NUM_ENTRIES_TO_PROCESS = atoi(argv[2]),
 		NUM_CORES = atoi(argv[3]),
 		i=0;
-
+	#ifndef SILENT
 	printf("Parsing file...\n");
+	#endif
 	Proc * queue = parseFile(argv[1], NUM_ENTRIES_TO_PROCESS);
+	#ifndef SILENT
 	printf("Normalizing times\n");
+	#endif
 	long startTime = queue[0].submitTime;
+	long maxRT = queue[0].runTime;
 	for(i=0; i<NUM_ENTRIES_TO_PROCESS; i++) {//validate core count
 		queue[i].submitTime -= startTime;  //Start the first submit time at 0 to save space
+		maxRT=max(maxRT,queue[i].runTime);
 		if(NUM_CORES < queue[i].numProc) {
 			printf("Error, a job requested more than the maximum number of cores!\
 					\n Available:%i\n Requested:%i\n", NUM_CORES, queue[i].numProc);
 			exit(0);
 		}
 	}
-
+	#ifndef SILENT
 	printf("Building timespan...\n");
-	long maxRuntime = queue[NUM_ENTRIES_TO_PROCESS-1].submitTime + queue[NUM_ENTRIES_TO_PROCESS-1].runTime;
-	maxRuntime *= 2;//any scheduling algorithm should not be more than twice the total runtime
-
+	#endif
+	long numTimeSlots = queue[NUM_ENTRIES_TO_PROCESS-1].submitTime + maxRT;
+	
 	#ifdef DEBUG
-	printf("TR%li\n",maxRuntime);
+	printf("numTimeSlots:%li\n",numTimeSlots);
 	#endif
 	printf("Allocating...\n");
-	Slot * timeSlot = (Slot *)calloc(maxRuntime,sizeof(Slot));
-	//Slot timeSlot[maxRuntime];
+	Slot * timeSlot = (Slot *)calloc(numTimeSlots,sizeof(Slot));
+	//Slot timeSlot[numTimeSlots];
 
-	for(i=0;i<maxRuntime;i++) { 
+	for(i=0;i<numTimeSlots;i++) { 
 		timeSlot[i].init(NUM_CORES, NUM_ENTRIES_TO_PROCESS);
 	}
 	printf("Making schedule...\n");

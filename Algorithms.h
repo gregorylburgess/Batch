@@ -18,11 +18,15 @@ long makeFCFS(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 	while (i<NUM_ENTRIES_TO_PROCESS) {
 		//while we have free cores to schedule at this timestep...
 		while (queue[i].submitTime <= time && minProcs <= timeslot[time].cores && i<NUM_ENTRIES_TO_PROCESS) {
-#ifdef DEBUG
-printf("st:%li, time:%li, rc:%i, ac:%i\n",queue[i].submitTime, time, minProcs, timeslot[time].cores);
-#endif
+			#ifdef DEBUG
+			printf("st:%li, time:%li, rc:%i, ac:%i\n",queue[i].submitTime, time, minProcs, timeslot[time].cores);
+			#endif
 			endTime = max(endTime,time+queue[i].runTime);
-printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs, timeslot[time].cores,queue[i].runTime,endTime);
+			#ifndef SILENT
+			printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs,
+
+			 timeslot[time].cores,queue[i].runTime,endTime);
+			#endif
 			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
 			i++;
 			minProcs = queue[i].numProc;
@@ -59,7 +63,9 @@ long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 			if(openJobs[i].numProc <= timeslot[time].cores){//I fit, time to allocate
 				endTime = max(endTime,time+openJobs[i].runTime);
 				endTimeForJob = time+openJobs[i].runTime;
+				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+				#endif
 				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 				openJobs.erase(openJobs.begin()+i);
 				i--;
@@ -204,7 +210,9 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) 
 			if(balancedJobs[i].numProc <= timeslot[time].cores){//I fit, time to allocate
 				endTime = max(endTime,time+balancedJobs[i].runTime);
 				endTimeForJob = time+balancedJobs[i].runTime;
+				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",balancedJobs[i].ID, time,balancedJobs[i].numProc, timeslot[time].cores,balancedJobs[i].runTime, endTimeForJob);
+				#endif
 				allocate(time,timeslot,balancedJobs[i].runTime, balancedJobs[i].numProc);
 				balancedJobs.erase(balancedJobs.begin()+i);
 				i--;
@@ -248,7 +256,9 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 			if(openJobs.front().numProc <= timeslot[time].cores && i==0){
 				endTime = max(endTime, time+openJobs.front().runTime);
 				endTimeForJob = time + openJobs.front().runTime;
-						printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time].cores,openJobs.front().runTime, endTimeForJob);
+				#ifndef SILENT
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time].cores,openJobs.front().runTime, endTimeForJob);
+				#endif
 				allocate(time,timeslot,openJobs.front().runTime,openJobs.front().numProc);
 				openJobs.erase(openJobs.begin());
 				i--;
@@ -261,7 +271,9 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 				if((openJobs[i].numProc <= timeslot[time].cores) && (openJobs[i].runTimeEstimate+time <= endTime)){
 					endTime = max(endTime,time+openJobs[i].runTime);
 					endTimeForJob = time+openJobs[i].runTime;
+					#ifndef SILENT
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+					#endif
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 					openJobs.erase(openJobs.begin()+i);
 					i--;
@@ -273,7 +285,9 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 					futureProcsRemaining -= openJobs[i].numProc;
 					endTime = max(endTime,time+openJobs[i].runTime);
 					endTimeForJob = time+openJobs[i].runTime;
+					#ifndef SILENT
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+					#endif
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 					openJobs.erase(openJobs.begin()+i);
 					i--;
