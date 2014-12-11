@@ -47,9 +47,9 @@ timeslot[time%numTimeSlots].cores,queue[i].runTime,endTime);
 			#endif
 			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
 
-			slowDown[queue[i].ID] = (queue[i].submitTime + time + queue[i].runTime) / queue[i].runTime;
-			waitTime[queue[i].ID] = queue[i].submitTime + time;
-			turnAroundTime[queue[i].ID] = queue[i].submitTime + time + queue[i].runTime;
+			slowDown[queue[i].ID] = (time - queue[i].submitTime + queue[i].runTime) / queue[i].runTime;
+			waitTime[queue[i].ID] = time - queue[i].submitTime ;
+			turnAroundTime[queue[i].ID] = time - queue[i].submitTime  + queue[i].runTime;
 
 
 			i++;
@@ -91,9 +91,9 @@ long makeBackfill(Proc *queue, Slot* timeslot,  map<int,long>& slowDown, map<int
 				#endif
 				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 
-				slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
-				waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
-				turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
+				turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
 
 				openJobs.erase(openJobs.begin()+i);
 				i--;
@@ -243,9 +243,9 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, 
 				#endif
 				allocate(time,timeslot,balancedJobs[i].runTime, balancedJobs[i].numProc);
 
-				slowDown[balancedJobs[i].ID] = (balancedJobs[i].submitTime + time + balancedJobs[i].runTime) / balancedJobs[i].runTime;
-				waitTime[balancedJobs[i].ID] = balancedJobs[i].submitTime + time;
-				turnAroundTime[balancedJobs[i].ID] = balancedJobs[i].submitTime + time + balancedJobs[i].runTime;
+				slowDown[balancedJobs[i].ID] = (time - balancedJobs[i].submitTime + balancedJobs[i].runTime) / balancedJobs[i].runTime;
+				waitTime[balancedJobs[i].ID] = time - balancedJobs[i].submitTime ;
+				turnAroundTime[balancedJobs[i].ID] = time - balancedJobs[i].submitTime + balancedJobs[i].runTime;
 
 				balancedJobs.erase(balancedJobs.begin()+i);
 				i--;
@@ -294,9 +294,9 @@ long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time%numTimeSlots].cores,openJobs.front().runTime, endTimeForJob);
 				#endif
 				allocate(time,timeslot,openJobs.front().runTime,openJobs.front().numProc);
-				slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
-				waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
-				turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime  + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime;
+				turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
 
 				openJobs.erase(openJobs.begin());
 				i--;
@@ -314,9 +314,9 @@ long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long
 					#endif
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 
-					slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
-					waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
-					turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+					slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
+					waitTime[openJobs[i].ID] = time - openJobs[i].submitTime;
+					turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + time + openJobs[i].runTime;
 
 					openJobs.erase(openJobs.begin()+i);
 					i--;
@@ -333,9 +333,9 @@ long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long
 					#endif
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 
-					slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
-					waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
-					turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+					slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
+					waitTime[openJobs[i].ID] = time - openJobs[i].submitTime;
+					turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
 
 					openJobs.erase(openJobs.begin()+i);
 					i--;

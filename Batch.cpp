@@ -51,12 +51,12 @@ Proc * parseFile(string path, int NUM_ENTRIES_TO_PROCESS) {
 }
 
 int main(int argc, char* argv[]) {
-	if (argc < 4) {
-		cout << "Usage: <filename> <number of lines to read from log> <number of cores available>";
+	if (argc < 3) {
+		cout << "Usage: <filename> <number of lines to read from log>";
 		exit(0);
 	}
 	NUM_ENTRIES_TO_PROCESS = atoi(argv[2]);
-	NUM_CORES = atoi(argv[3]);
+	//NUM_CORES = atoi(argv[3]);
 
 	#ifndef SILENT
 	printf("Parsing file...\n");
@@ -67,16 +67,14 @@ int main(int argc, char* argv[]) {
 	#endif
 	long startTime = queue[0].submitTime;
 	long maxRT = queue[0].runTime;
+	int maxCores = queue[0].numProc;
 	int i=0;
 	for(i=0; i<NUM_ENTRIES_TO_PROCESS; i++) {//validate core count
 		queue[i].submitTime -= startTime;  //Start the first submit time at 0 to save space
 		maxRT=max(maxRT,queue[i].runTime);
-		if(NUM_CORES < queue[i].numProc) {
-			printf("Error, a job requested more than the maximum number of cores!\
-					\n Available:%i\n Requested:%i\n", NUM_CORES, queue[i].numProc);
-			exit(0);
-		}
+		maxCores=max(maxCores,queue[i].numProc);
 	}
+	NUM_CORES = maxCores;
 	#ifndef SILENT
 	printf("Building timespan...\n");
 	#endif
@@ -112,7 +110,7 @@ int main(int argc, char* argv[]) {
 	long time = makeBackfill(queue,timeSlot, slowDown, waitTime, turnAroundTime);
 	#endif
 	#ifdef SPIRAL
-	long time = makeBalancedSpiral(queue, slowDown, waitTime, turnAroundTime);
+	long time = makeBalancedSpiral(queue,timeSlot, slowDown, waitTime, turnAroundTime);
 	#endif
 	#ifdef EASY
 	long time = makeEasy(queue,timeSlot, slowDown, waitTime, turnAroundTime);
@@ -124,6 +122,7 @@ int main(int argc, char* argv[]) {
 		maxSlowDown = max(maxSlowDown,it->second);
 	}
 	double avgSlowDown = totalSlowDown/NUM_ENTRIES_TO_PROCESS;
+	printf("NumCores:%i\n",NUM_CORES);
 	printf("\nTotal Slowdown: %li\n",totalSlowDown);
 	printf("Avg Slowdown: %f\n",avgSlowDown);
 	printf("Max Slowdown: %li \n",maxSlowDown);
