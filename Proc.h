@@ -9,7 +9,7 @@
 #else
 	//Otherwise, use the real runtime
 	#define RUNTIMEESTIMATE_INDEX 9
-#endif
+#endif 
 struct Proc {
 	int ID;
 	int numProc;
