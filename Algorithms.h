@@ -217,3 +217,57 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) 
 	return endTime;
 }
 
+long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
+	long time=0;
+	long endTime = 0;
+	long endTimeForJob = 0;
+	int i=0;
+	vector<long> current_procs;
+	vector<Proc> openJobs;
+	vector<Proc> balancedJobs;
+	int queuePosition = 0;
+
+	//While we have processes to schedule...
+	while (true) {
+
+
+		if(queuePosition >= NUM_ENTRIES_TO_PROCESS && time > endTime){
+			//Did all we wanted to do
+			break;
+		}
+
+		//Get all the new jobs and push them into the openjobs.
+		while((queue[queuePosition].submitTime <= time) && (queuePosition < NUM_ENTRIES_TO_PROCESS)){
+			openJobs.push_back(queue[queuePosition]);
+			queuePosition++;
+		}
+
+		//Got some openjobs, time to start scheduling with EASY
+		for(i=0; i<openJobs.size(); i++){
+			//Check to see if I have a priority job
+			if(openJobs.front().numProc <= timeslot[time].cores && i==0){
+				endTime = max(endTime, time+openJobs.front().runTime);
+				endTimeForJob = time + openJobs.front().runTime;
+						printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time].cores,openJobs.front().runTime, endTimeForJob);
+				allocate(time,timeslot,openJobs.front().runTime,openJobs.front().numProc);
+				openJobs.erase(openJobs.begin());
+				i--;
+			}
+
+			else{ // I am not the first job so I should try to backfill
+				if((openJobs[i].numProc <= timeslot[time].cores) && (openJobs[i].runTimeEstimate+time <= endTime)){
+					endTime = max(endTime,time+openJobs[i].runTime);
+					endTimeForJob = time+openJobs[i].runTime;
+					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
+					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+					openJobs.erase(openJobs.begin()+i);
+					i--;
+				}
+			}
+		}
+		//else continue since I can't fit this one but I might be able to fit the next one.
+		time += 1;
+
+	}
+	return endTime;
+}

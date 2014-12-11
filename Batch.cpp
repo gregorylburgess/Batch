@@ -93,6 +93,9 @@ int main(int argc, char* argv[]) {
 #ifdef SPIRAL
 	long time = makeBalancedSpiral(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
 #endif
+#ifdef EASY
+	long time = makeEasy(queue,timeSlot,NUM_ENTRIES_TO_PROCESS);
+#endif
 	printf("\nTotal run time: %li\n",time+startTime);
 	
 	return 0;
