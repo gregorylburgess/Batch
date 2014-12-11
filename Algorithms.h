@@ -8,7 +8,7 @@ void allocate(int i, Slot* timeslot, long runTime, int coreCount) {
 	return;
 }
 
-long makeFCFS(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
+long makeFCFS(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
 	long time= queue[0].submitTime, endTime=0;
 	int i=0, j=0;
 	int minProcs = queue[0].numProc;
@@ -24,6 +24,12 @@ printf("st:%li, time:%li, rc:%i, ac:%i\n",queue[i].submitTime, time, minProcs, t
 			endTime = max(endTime,time+queue[i].runTime);
 printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs, timeslot[time].cores,queue[i].runTime,endTime);
 			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
+
+			slowDown[queue[i].ID] = (queue[i].submitTime + time + queue[i].runTime) / queue[i].runTime;
+			waitTime[queue[i].ID] = queue[i].submitTime + time;
+			turnAroundTime[queue[i].ID] = queue[i].submitTime + time + queue[i].runTime;
+
+
 			i++;
 			minProcs = queue[i].numProc;
 		}
@@ -33,7 +39,7 @@ printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, 
 	return endTime;
 }
 
-long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
+long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime){
 	long time=0;
 	long endTime = 0;
 	long endTimeForJob = 0;
@@ -61,6 +67,11 @@ long makeBackfill(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 				endTimeForJob = time+openJobs[i].runTime;
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
 				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+
+				slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
+				turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+
 				openJobs.erase(openJobs.begin()+i);
 				i--;
 			}
@@ -168,7 +179,7 @@ vector<Proc> balancedSpiralHeuristic(vector<Proc> & openJobs, vector<Proc> & old
 }
 
 
-long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
+long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
 	long time=0;
 	long endTime = 0;
 	long endTimeForJob = 0;
@@ -206,6 +217,11 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) 
 				endTimeForJob = time+balancedJobs[i].runTime;
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",balancedJobs[i].ID, time,balancedJobs[i].numProc, timeslot[time].cores,balancedJobs[i].runTime, endTimeForJob);
 				allocate(time,timeslot,balancedJobs[i].runTime, balancedJobs[i].numProc);
+
+				slowDown[balancedJobs[i].ID] = (balancedJobs[i].submitTime + time + balancedJobs[i].runTime) / balancedJobs[i].runTime;
+				waitTime[balancedJobs[i].ID] = balancedJobs[i].submitTime + time;
+				turnAroundTime[balancedJobs[i].ID] = balancedJobs[i].submitTime + time + balancedJobs[i].runTime;
+
 				balancedJobs.erase(balancedJobs.begin()+i);
 				i--;
 			}
@@ -217,7 +233,7 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) 
 	return endTime;
 }
 
-long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
+long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
 	long time=0;
 	long endTime = 0;
 	long endTimeForJob = 0;
@@ -248,8 +264,24 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 			if(openJobs.front().numProc <= timeslot[time].cores && i==0){
 				endTime = max(endTime, time+openJobs.front().runTime);
 				endTimeForJob = time + openJobs.front().runTime;
-						printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time].cores,openJobs.front().runTime, endTimeForJob);
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time].cores,openJobs.front().runTime, endTimeForJob);
 				allocate(time,timeslot,openJobs.front().runTime,openJobs.front().numProc);
+
+
+				slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
+				turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+
+
+				for(int j=0; j<NUM_ENTRIES_TO_PROCESS; j++){
+						if(queue[j].ID == openJobs[i].ID){
+							queue[j].waitTime = queue[j].submitTime + time;
+							queue[j].turnAroundtime = queue[j].submitTime + time + queue[j].runTime;
+							queue[j].slowDown = (queue[j].submitTime + time + queue[j].runTime) / queue[j].runTime;
+							break;
+						}
+					}
+
 				openJobs.erase(openJobs.begin());
 				i--;
 				//Set the amount of cores I need in the future for the new front job.
@@ -263,6 +295,11 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 					endTimeForJob = time+openJobs[i].runTime;
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+
+					slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
+					waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
+					turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+
 					openJobs.erase(openJobs.begin()+i);
 					i--;
 				}
@@ -275,6 +312,17 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS) {
 					endTimeForJob = time+openJobs[i].runTime;
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+
+#ifdef DEBUG1
+					for(int j=0; j<NUM_ENTRIES_TO_PROCESS; j++){
+							if(queue[j].ID == openJobs[i].ID){
+								queue[j].waitTime = queue[j].submitTime + time;
+								queue[j].turnAroundtime = queue[j].submitTime + time + queue[j].runTime;
+								queue[j].slowDown = (queue[j].submitTime + time + queue[j].runTime) / queue[j].runTime;
+								break;
+							}
+						}
+#endif
 					openJobs.erase(openJobs.begin()+i);
 					i--;
 				}
