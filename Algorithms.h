@@ -272,16 +272,6 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,lo
 				waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
 				turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
 
-
-				for(int j=0; j<NUM_ENTRIES_TO_PROCESS; j++){
-						if(queue[j].ID == openJobs[i].ID){
-							queue[j].waitTime = queue[j].submitTime + time;
-							queue[j].turnAroundtime = queue[j].submitTime + time + queue[j].runTime;
-							queue[j].slowDown = (queue[j].submitTime + time + queue[j].runTime) / queue[j].runTime;
-							break;
-						}
-					}
-
 				openJobs.erase(openJobs.begin());
 				i--;
 				//Set the amount of cores I need in the future for the new front job.
@@ -313,16 +303,10 @@ long makeEasy(Proc *queue, Slot* timeslot,int NUM_ENTRIES_TO_PROCESS, map<int,lo
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time].cores,openJobs[i].runTime, endTimeForJob);
 					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 
-#ifdef DEBUG1
-					for(int j=0; j<NUM_ENTRIES_TO_PROCESS; j++){
-							if(queue[j].ID == openJobs[i].ID){
-								queue[j].waitTime = queue[j].submitTime + time;
-								queue[j].turnAroundtime = queue[j].submitTime + time + queue[j].runTime;
-								queue[j].slowDown = (queue[j].submitTime + time + queue[j].runTime) / queue[j].runTime;
-								break;
-							}
-						}
-#endif
+					slowDown[openJobs[i].ID] = (openJobs[i].submitTime + time + openJobs[i].runTime) / openJobs[i].runTime;
+					waitTime[openJobs[i].ID] = openJobs[i].submitTime + time;
+					turnAroundTime[openJobs[i].ID] = openJobs[i].submitTime + time + openJobs[i].runTime;
+
 					openJobs.erase(openJobs.begin()+i);
 					i--;
 				}
