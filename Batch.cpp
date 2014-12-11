@@ -38,6 +38,7 @@ Proc * parseFile(string path, int NUM_ENTRIES_TO_PROCESS) {
 			j++;
 		}
 		if (array[4]>=0) {  //Ignore lines that don't have a specified processor request
+			array[0]=i; //Make our own IDs
 			procs[i].init(array);
 			i++;
 		}
