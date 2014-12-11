@@ -77,11 +77,13 @@ int main(int argc, char* argv[]) {
 	printf("Building timespan...\n");
 	#endif
 	long numTimeSlots = queue[NUM_ENTRIES_TO_PROCESS-1].submitTime + maxRT;
-	
+	numTimeSlots*=1.5;
 	#ifdef DEBUG
 	printf("numTimeSlots:%li\n",numTimeSlots);
 	#endif
+	#ifndef SILENT
 	printf("Allocating...\n");
+	#endif
 	Slot * timeSlot = (Slot *)calloc(numTimeSlots,sizeof(Slot));
 	//Slot timeSlot[numTimeSlots];
 
@@ -94,8 +96,9 @@ int main(int argc, char* argv[]) {
 	map<int, long> waitTime;
 	map<int, long> turnAroundTime;
 	map<int, long>::iterator it;
-
+	#ifndef SILENT
 	printf("Making schedule...\n");
+	#endif
 #ifdef FCFS
 	long time = makeFCFS(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
 #endif
@@ -108,12 +111,18 @@ int main(int argc, char* argv[]) {
 #ifdef EASY
 	long time = makeEasy(queue,timeSlot,NUM_ENTRIES_TO_PROCESS, slowDown, waitTime, turnAroundTime);
 #endif
-	printf("\nTotal run time: %li\n",time+startTime);
-	
 
+	long totalSlowDown = 0,  maxSlowDown=0;
 	for(it = slowDown.begin();it != slowDown.end(); it++){
-			printf("Job %i had slowdown of %li\n", it->first, it->second);
+			totalSlowDown += it->second;
+			maxSlowDown = max(maxSlowDown,it->second);
 		}
+	double avgSlowDown = totalSlowDown/NUM_ENTRIES_TO_PROCESS;
+	printf("\nTotal Slowdown: %li\n",totalSlowDown);
+	printf("Avg Slowdown: %f\n",avgSlowDown);
+	printf("Max Slowdown: %li \n",maxSlowDown);
+	printf("Total run time: %li\n",time+startTime);
+
 	return 0;
 }
 
