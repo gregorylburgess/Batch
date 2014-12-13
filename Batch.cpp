@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
+#include <time.h>
 #include <map>
 #include <vector>
 #include "Slot.h"
@@ -123,6 +124,9 @@ int main(int argc, char* argv[]) {
 	#endif
 	#ifdef LPT
 	long time = makeLPT(queue,timeSlot, slowDown, waitTime, turnAroundTime);
+	#endif
+	#ifdef RANDOM
+	long time = makeRandom(queue,timeSlot, slowDown, waitTime, turnAroundTime);
 	#endif
 
 	long totalSlowDown = 0,  maxSlowDown=0;

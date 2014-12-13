@@ -501,3 +501,79 @@ long makeLPT(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,lon
 	return endTime;
 }
 
+vector<Proc> randomHeuristic(vector<Proc> & openJobs){
+	Proc x;
+	int i,j;
+	int n = openJobs.size();
+	srand(time(NULL));
+
+
+	//Randomize the array with Fisher-Yates Shuffle
+	for(i = n-1; i>0; i--){
+		j = rand()%i;
+		x = openJobs[j];
+		openJobs[j] = openJobs[i];
+		openJobs[i] = x;
+	}
+
+
+	return openJobs;
+
+}
+
+
+long makeRandom(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
+	long time=0;
+	long endTime = 0;
+	long endTimeForJob = 0;
+	int i=0;
+	vector<long> current_procs;
+	vector<Proc> openJobs;
+	int queuePosition = 0;
+	//While we have processes to schedule...
+	while (true) {
+
+
+		if(queuePosition >= NUM_ENTRIES_TO_PROCESS && time > endTime){
+			//Did all we wanted to do
+			break;
+		}
+
+		//Get all the new jobs and push them into the openjobs.
+		while((queue[queuePosition].submitTime <= time) && (queuePosition < NUM_ENTRIES_TO_PROCESS)){
+			openJobs.push_back(queue[queuePosition]);
+			queuePosition++;
+		}
+
+		//Got some openjobs, want to balance them
+		if(openJobs.size() > 0){
+			openJobs = randomHeuristic(openJobs);
+
+		}
+
+
+		//Got some openjobs, time to start scheduling with backfill
+		for(i=0; i<openJobs.size(); i++){
+			if(openJobs[i].numProc <= timeslot[time%numTimeSlots].cores){//I fit, time to allocate
+				endTime = max(endTime,time+openJobs[i].runTime);
+				endTimeForJob = time+openJobs[i].runTime;
+				#ifndef SILENT
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
+				#endif
+				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+
+				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
+				turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
+
+				openJobs.erase(openJobs.begin()+i);
+				i--;
+			}
+			//else continue since I can't fit this one but I might be able to fit the next one.
+		}
+
+		time += 1;
+	}
+	return endTime;
+}
+
