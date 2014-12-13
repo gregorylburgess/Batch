@@ -22,7 +22,7 @@ arrIN=(${rslt// / })
 
 for x in $arrIN
 do
-	echo "> [$x]"
+	echo "> [$x]"=F2-F$2
 done
 np=${arrIN[0]}
 ts=${arrIN[3]}
@@ -38,7 +38,6 @@ done
 #Random 20x
 alg="RANDOM"
 echo "$alg"
-echo "$alg" >> "rslt.txt"
 g++ -D $alg -D SILENT -O4 Batch.cpp Proc.h Proc.cpp Slot.h Slot.cpp Event.h Event.cpp  -o batch
 #stats for random
 let ts=0
@@ -65,7 +64,7 @@ as=`echo $as/$runs | bc -l`
 ms=`echo $ms/$runs | bc -l`
 trt=`echo $trt/$runs | bc -l`
 
-out=",$np$alg,$ts,$as,$ms,$trt"
+out=",$np,$alg,$ts,$as,$ms,$trt"
 echo "$out"
 echo "$out" >> "rslt.txt"
 
