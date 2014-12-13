@@ -41,7 +41,7 @@ Proc * parseFile(string path, int NUM_ENTRIES_TO_PROCESS) {
 			j++;
 		}
 		if (array[NUMPROC_INDEX]>=0 && array[RUNTIME_INDEX]>0) {  //Ignore lines that don't have a specified processor request or runtimes <= 0
-			if(array[RUNTIMEESTIMATE_INDEX] < 0) { //if we don't have an estimated run time, fake it.
+			if(array[RUNTIMEESTIMATE_INDEX] <= 0) { //if we don't have an estimated run time, fake it.
 				array[RUNTIMEESTIMATE_INDEX] = 1.7 * array[RUNTIME_INDEX];
 			}
 			array[ID_INDEX]=i; //Make our own IDs
