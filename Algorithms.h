@@ -106,7 +106,7 @@ long makeBackfill(Proc *queue, Slot* timeslot,  map<int,long>& slowDown, map<int
 	return endTime;
 }
 
-vector<Proc> balancedSpiralHeuristic(vector<Proc> & openJobs, vector<Proc> & oldBalancedJobs){
+vector<Proc> balancedSpiralHeuristic(vector<Proc> & openJobs){
 	vector<Proc> balancedJobs;
 	vector<Proc> L;
 	vector<Proc> R;
@@ -115,12 +115,9 @@ vector<Proc> balancedSpiralHeuristic(vector<Proc> & openJobs, vector<Proc> & old
 	Proc x;
 	Proc last;
 	int i,j;
-	int n = openJobs.size() + oldBalancedJobs.size();
+	int n = openJobs.size();
 
-	//merge the old balanced jobs into the new open jobs and re-run heuristic
-	for(i=0; i<oldBalancedJobs.size(); i++){
-		openJobs.push_back(oldBalancedJobs[i]);
-	}
+
 
 	//sort the jobs in terms of weight. Insertion sort
 	for(i =1; i<n-1; i++){
@@ -209,7 +206,6 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, 
 	int i=0;
 	vector<long> current_procs;
 	vector<Proc> openJobs;
-	vector<Proc> balancedJobs;
 	int queuePosition = 0;
 	//While we have processes to schedule...
 	while (true) {
@@ -228,26 +224,26 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, 
 
 		//Got some openjobs, want to balance them
 		if(openJobs.size() > 0){
-			balancedJobs = balancedSpiralHeuristic(openJobs, balancedJobs);
+			openJobs = balancedSpiralHeuristic(openJobs);
 
 		}
 
 
 		//Got some openjobs, time to start scheduling with backfill
-		for(i=0; i<balancedJobs.size(); i++){
-			if(balancedJobs[i].numProc <= timeslot[time%numTimeSlots].cores){//I fit, time to allocate
-				endTime = max(endTime,time+balancedJobs[i].runTime);
-				endTimeForJob = time+balancedJobs[i].runTime;
+		for(i=0; i<openJobs.size(); i++){
+			if(openJobs[i].numProc <= timeslot[time%numTimeSlots].cores){//I fit, time to allocate
+				endTime = max(endTime,time+openJobs[i].runTime);
+				endTimeForJob = time+openJobs[i].runTime;
 				#ifndef SILENT
-				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",balancedJobs[i].ID, time,balancedJobs[i].numProc, timeslot[time%numTimeSlots].cores,balancedJobs[i].runTime, endTimeForJob);
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 				#endif
-				allocate(time,timeslot,balancedJobs[i].runTime, balancedJobs[i].numProc);
+				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
 
-				slowDown[balancedJobs[i].ID] = (time - balancedJobs[i].submitTime + balancedJobs[i].runTime) / balancedJobs[i].runTime;
-				waitTime[balancedJobs[i].ID] = time - balancedJobs[i].submitTime ;
-				turnAroundTime[balancedJobs[i].ID] = time - balancedJobs[i].submitTime + balancedJobs[i].runTime;
+				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
+				turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
 
-				balancedJobs.erase(balancedJobs.begin()+i);
+				openJobs.erase(openJobs.begin()+i);
 				i--;
 			}
 			//else continue since I can't fit this one but I might be able to fit the next one.
@@ -346,3 +342,162 @@ long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long
 	}
 	return endTime;
 }
+
+vector<Proc> sptHeuristic(vector<Proc> & openJobs){
+	Proc x;
+	int i,j;
+	int n = openJobs.size();
+
+	//sort the jobs in terms of weight, least to greatest. Insertion sort
+	for(i =1; i<n-1; i++){
+		x = openJobs[i];
+		j = i;
+		while((j>0) && (openJobs[j-1].runTimeEstimate > x.runTimeEstimate)){
+			openJobs[j] = openJobs[j-1];
+			j--;
+		}
+		openJobs[j] = x;
+	}
+	return openJobs;
+}
+
+
+long makeSPT(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
+	long time=0;
+	long endTime = 0;
+	long endTimeForJob = 0;
+	int i=0;
+	vector<long> current_procs;
+	vector<Proc> openJobs;
+	int queuePosition = 0;
+	//While we have processes to schedule...
+	while (true) {
+
+
+		if(queuePosition >= NUM_ENTRIES_TO_PROCESS && time > endTime){
+			//Did all we wanted to do
+			break;
+		}
+
+		//Get all the new jobs and push them into the openjobs.
+		while((queue[queuePosition].submitTime <= time) && (queuePosition < NUM_ENTRIES_TO_PROCESS)){
+			openJobs.push_back(queue[queuePosition]);
+			queuePosition++;
+		}
+
+		//Got some openjobs, want to balance them
+		if(openJobs.size() > 0){
+			openJobs = sptHeuristic(openJobs);
+
+		}
+
+
+		//Got some openjobs, time to start scheduling with backfill
+		for(i=0; i<openJobs.size(); i++){
+			if(openJobs[i].numProc <= timeslot[time%numTimeSlots].cores){//I fit, time to allocate
+				endTime = max(endTime,time+openJobs[i].runTime);
+				endTimeForJob = time+openJobs[i].runTime;
+				#ifndef SILENT
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
+				#endif
+				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+
+				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
+				turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
+
+				openJobs.erase(openJobs.begin()+i);
+				i--;
+			}
+			//else continue since I can't fit this one but I might be able to fit the next one.
+		}
+
+		time += 1;
+	}
+	return endTime;
+}
+
+vector<Proc> lptHeuristic(vector<Proc> & openJobs){
+	Proc x;
+	int i,j;
+	int n = openJobs.size();
+
+	//sort the jobs in terms of weight, greatest to least. Insertion sort
+	for(i =1; i<n-1; i++){
+		x = openJobs[i];
+		j = i;
+		while((j>0) && (openJobs[j-1].runTimeEstimate > x.runTimeEstimate)){
+			openJobs[j] = openJobs[j-1];
+			j--;
+		}
+		openJobs[j] = x;
+	}
+
+	//reverse array
+	j= n-1;
+	for(i=0;i<n/2;i++){
+		x = openJobs[i];
+		openJobs[i] = openJobs[j];
+		openJobs[j] = x;
+		j--;
+	}
+	return openJobs;
+
+}
+
+
+long makeLPT(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,long>& waitTime, map<int,long>& turnAroundTime) {
+	long time=0;
+	long endTime = 0;
+	long endTimeForJob = 0;
+	int i=0;
+	vector<long> current_procs;
+	vector<Proc> openJobs;
+	int queuePosition = 0;
+	//While we have processes to schedule...
+	while (true) {
+
+
+		if(queuePosition >= NUM_ENTRIES_TO_PROCESS && time > endTime){
+			//Did all we wanted to do
+			break;
+		}
+
+		//Get all the new jobs and push them into the openjobs.
+		while((queue[queuePosition].submitTime <= time) && (queuePosition < NUM_ENTRIES_TO_PROCESS)){
+			openJobs.push_back(queue[queuePosition]);
+			queuePosition++;
+		}
+
+		//Got some openjobs, want to balance them
+		if(openJobs.size() > 0){
+			openJobs = lptHeuristic(openJobs);
+
+		}
+
+
+		//Got some openjobs, time to start scheduling with backfill
+		for(i=0; i<openJobs.size(); i++){
+			if(openJobs[i].numProc <= timeslot[time%numTimeSlots].cores){//I fit, time to allocate
+				endTime = max(endTime,time+openJobs[i].runTime);
+				endTimeForJob = time+openJobs[i].runTime;
+				#ifndef SILENT
+				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
+				#endif
+				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+
+				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
+				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
+				turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
+
+				openJobs.erase(openJobs.begin()+i);
+				i--;
+			}
+			//else continue since I can't fit this one but I might be able to fit the next one.
+		}
+
+		time += 1;
+	}
+	return endTime;
+}
+
