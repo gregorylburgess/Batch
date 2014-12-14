@@ -409,7 +409,9 @@ long makeSPT(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,lon
 				openJobs.erase(openJobs.begin()+i);
 				i--;
 			}
-			//else continue since I can't fit this one but I might be able to fit the next one.
+			else{//else break since I don't fit and have to wait.
+				break;
+			}
 		}
 
 		time += 1;
@@ -493,9 +495,10 @@ long makeLPT(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,lon
 				openJobs.erase(openJobs.begin()+i);
 				i--;
 			}
-			//else continue since I can't fit this one but I might be able to fit the next one.
+			else{//else break since I don't fit and have to wait.
+				break;
+			}
 		}
-
 		time += 1;
 	}
 	return endTime;
