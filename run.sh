@@ -10,7 +10,10 @@ let as=0
 let ms=0
 let trt=0
 let np=0
-
+let d=0
+let atbj=0
+let art=0
+let aert=0
 for alg in "FCFS" "BACKFILL" "SPIRAL" "EASY" "SPT" "LPT"
 do
 echo "$alg"
@@ -29,8 +32,12 @@ ts=${arrIN[3]}
 as=${arrIN[6]}
 ms=${arrIN[9]}
 trt=${arrIN[13]}
+d=${arrIN[15]}
+atbj=${arrIN[20]}
+art=${arrIN[23]}
+aert=${arrIN[26]}
 
-out="$np,$alg,$ts,$as,$ms,$trt"
+out="$np,$alg,$ts,$as,$ms,$trt,$d,$atbj,$art,$aert"
 echo "$out"
 echo "$out" >> "rslt.txt"
 done
@@ -64,7 +71,7 @@ as=`echo $as/$runs | bc -l`
 ms=`echo $ms/$runs | bc -l`
 trt=`echo $trt/$runs | bc -l`
 
-out=",$np,$alg,$ts,$as,$ms,$trt"
+out="$np,$alg,$ts,$as,$ms,$trt,$d,$atbj,$art,$aert"
 echo "$out"
 echo "$out" >> "rslt.txt"
 

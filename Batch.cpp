@@ -73,10 +73,17 @@ int main(int argc, char* argv[]) {
 	long maxRT = queue[0].runTime;
 	int maxCores = queue[0].numProc;
 	int i=0;
+	double usefulArea=0, totalArea=0, tDelta=0, avgRT=0, avgERT=0;
 	for(i=0; i<NUM_ENTRIES_TO_PROCESS; i++) {//validate core count
 		queue[i].submitTime -= startTime;  //Start the first submit time at 0 to save space
 		maxRT=max(maxRT,queue[i].runTime);
 		maxCores=max(maxCores,queue[i].numProc);
+		usefulArea += queue[i].runTime * queue[i].numProc;
+		avgRT += queue[i].runTime;
+		avgERT += queue[i].runTimeEstimate;
+		if(i>0) {
+			tDelta += queue[i].submitTime - queue[i-1].submitTime;
+		}
 	}
 	NUM_CORES = maxCores;
 	#ifndef SILENT
@@ -129,6 +136,8 @@ int main(int argc, char* argv[]) {
 	long time = makeRandom(queue,timeSlot, slowDown, waitTime, turnAroundTime);
 	#endif
 
+	totalArea = time*NUM_CORES;
+	
 	long totalSlowDown = 0,  maxSlowDown=0;
 	for(it = slowDown.begin();it != slowDown.end(); it++){
 		totalSlowDown += it->second;
@@ -140,7 +149,10 @@ int main(int argc, char* argv[]) {
 	printf("Avg Slowdown: %f\n",avgSlowDown);
 	printf("Max Slowdown: %li \n",maxSlowDown);
 	printf("Total run time: %li\n",time+startTime);
-
+	printf("Density: %lf\n", usefulArea/totalArea);
+	printf("Avg Time Between Jobs: %lf\n",tDelta/NUM_ENTRIES_TO_PROCESS);
+	printf("Avg RT: %lf\n",avgRT/NUM_ENTRIES_TO_PROCESS);
+	printf("Avg ERT: %lf\n",avgERT/NUM_ENTRIES_TO_PROCESS);
 	return 0;
 }
 

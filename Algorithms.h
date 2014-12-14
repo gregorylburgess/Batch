@@ -45,7 +45,7 @@ long makeFCFS(Proc *queue, Slot* timeslot,  map<int,long>& slowDown, map<int,lon
 			printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",queue[i].ID, time,minProcs, 
 timeslot[time%numTimeSlots].cores,queue[i].runTime,endTime);
 			#endif
-			allocate(time,timeslot,queue[i].runTime, queue[i].numProc);
+			allocate(time,timeslot,max(queue[i].runTimeEstimate,queue[i].runTime), queue[i].numProc);
 
 			slowDown[queue[i].ID] = (time - queue[i].submitTime + queue[i].runTime) / queue[i].runTime;
 			waitTime[queue[i].ID] = time - queue[i].submitTime ;
@@ -89,7 +89,7 @@ long makeBackfill(Proc *queue, Slot* timeslot,  map<int,long>& slowDown, map<int
 				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 				#endif
-				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+				allocate(time,timeslot,max(openJobs[i].runTimeEstimate,openJobs[i].runTime), openJobs[i].numProc);
 
 				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
 				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
@@ -237,7 +237,7 @@ long makeBalancedSpiral(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, 
 				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 				#endif
-				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+				allocate(time,timeslot,max(openJobs[i].runTimeEstimate,openJobs[i].runTime), openJobs[i].numProc);
 
 				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
 				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
@@ -289,7 +289,7 @@ long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long
 				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs.front().ID, time,openJobs.front().numProc, timeslot[time%numTimeSlots].cores,openJobs.front().runTime, endTimeForJob);
 				#endif
-				allocate(time,timeslot,openJobs.front().runTime,openJobs.front().numProc);
+				allocate(time,timeslot,max(openJobs.front().runTimeEstimate,openJobs.front().runTime),openJobs.front().numProc);
 				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime  + openJobs[i].runTime) / openJobs[i].runTime;
 				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime;
 				turnAroundTime[openJobs[i].ID] = time - openJobs[i].submitTime + openJobs[i].runTime;
@@ -308,7 +308,7 @@ long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long
 					#ifndef SILENT
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 					#endif
-					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+					allocate(time,timeslot,max(openJobs[i].runTimeEstimate,openJobs[i].runTime), openJobs[i].numProc);
 
 					slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
 					waitTime[openJobs[i].ID] = time - openJobs[i].submitTime;
@@ -327,7 +327,7 @@ long makeEasy(Proc *queue, Slot* timeslot, map<int,long>& slowDown, map<int,long
 					#ifndef SILENT
 					printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 					#endif
-					allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+					allocate(time,timeslot,max(openJobs[i].runTimeEstimate,openJobs[i].runTime), openJobs[i].numProc);
 
 					slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
 					waitTime[openJobs[i].ID] = time - openJobs[i].submitTime;
@@ -400,7 +400,7 @@ long makeSPT(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,lon
 				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 				#endif
-				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+				allocate(time,timeslot,max(openJobs[i].runTimeEstimate,openJobs[i].runTime), openJobs[i].numProc);
 
 				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
 				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
@@ -486,7 +486,7 @@ long makeLPT(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,lon
 				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 				#endif
-				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+				allocate(time,timeslot,max(openJobs[i].runTimeEstimate,openJobs[i].runTime), openJobs[i].numProc);
 
 				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
 				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
@@ -563,7 +563,7 @@ long makeRandom(Proc *queue, Slot* timeslot,   map<int,long>& slowDown, map<int,
 				#ifndef SILENT
 				printf("ptJob %i @ t %li\t c_reqd: %i\tc_avl: %i\t%li \tEnd:%li\n",openJobs[i].ID, time,openJobs[i].numProc, timeslot[time%numTimeSlots].cores,openJobs[i].runTime, endTimeForJob);
 				#endif
-				allocate(time,timeslot,openJobs[i].runTime, openJobs[i].numProc);
+				allocate(time,timeslot,max(openJobs[i].runTimeEstimate,openJobs[i].runTime), openJobs[i].numProc);
 
 				slowDown[openJobs[i].ID] = (time - openJobs[i].submitTime + openJobs[i].runTime) / openJobs[i].runTime;
 				waitTime[openJobs[i].ID] = time - openJobs[i].submitTime ;
